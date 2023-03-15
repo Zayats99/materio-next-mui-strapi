@@ -15,20 +15,20 @@ import type { EmotionCache } from '@emotion/cache'
 import themeConfig from 'src/configs/themeConfig'
 
 // ** Component Imports
-import UserLayout from 'src/layouts/UserLayout'
-import ThemeComponent from 'src/@core/theme/ThemeComponent'
+import UserLayout from 'src/templates/UserLayout'
+import ThemeComponent from 'src/theme/ThemeComponent'
 
 // ** Contexts
-import { SettingsConsumer, SettingsProvider } from 'src/@core/context/settingsContext'
+import { SettingsConsumer, SettingsProvider } from 'src/context/settingsContext'
 
 // ** Utils Imports
-import { createEmotionCache } from 'src/@core/utils/create-emotion-cache'
+import { createEmotionCache } from 'src/utils/create-emotion-cache'
 
 // ** React Perfect Scrollbar Style
 import 'react-perfect-scrollbar/dist/css/styles.css'
 
 // ** Global css styles
-import '../../styles/globals.css'
+import '../styles/globals.css'
 
 // ** Extend App Props with Emotion
 type ExtendedAppProps = AppProps & {

@@ -2,7 +2,7 @@
 import Grid from '@mui/material/Grid'
 
 // ** Styled Component
-import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
+import DatePickerWrapper from 'src/styles/libs/react-datepicker'
 
 // ** Demo Components Imports
 import FormLayoutsBasic from 'src/views/form-layouts/FormLayoutsBasic'
