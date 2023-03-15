@@ -1,10 +1,7 @@
-// ** React Imports
 import { useState, Fragment, ChangeEvent, MouseEvent, ReactNode } from 'react'
 
-// ** Next Imports
 import Link from 'next/link'
 
-// ** MUI Components
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
@@ -21,7 +18,6 @@ import MuiCard, { CardProps } from '@mui/material/Card'
 import InputAdornment from '@mui/material/InputAdornment'
 import MuiFormControlLabel, { FormControlLabelProps } from '@mui/material/FormControlLabel'
 
-// ** Icons Imports
 import Google from 'mdi-material-ui/Google'
 import Github from 'mdi-material-ui/Github'
 import Twitter from 'mdi-material-ui/Twitter'
@@ -29,20 +25,27 @@ import Facebook from 'mdi-material-ui/Facebook'
 import EyeOutline from 'mdi-material-ui/EyeOutline'
 import EyeOffOutline from 'mdi-material-ui/EyeOffOutline'
 
-// ** Configs
 import themeConfig from 'src/configs/themeConfig'
 
-// ** Layout Import
 import BlankLayout from 'src/templates/layouts/BlankLayout'
 
-// ** Demo Imports
 import FooterIllustrationsV1 from 'src/views/pages/auth/FooterIllustration'
-import { Controller, ControllerRenderProps, FieldValues, useForm } from 'react-hook-form'
+import { Controller, ControllerRenderProps, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 
 interface State {
   password: string
   showPassword: boolean
 }
+
+type FormSchemaType = z.infer<typeof formSchema>
+
+const formSchema = z.object({
+  name: z.string().min(1, 'Username is required').max(100),
+  email: z.string().email('Invalid email').min(1, 'Email is required'),
+  password: z.string().min(1, 'Password is required').min(6, 'Password must have more than 6 characters')
+})
 
 // ** Styled Components
 const Card = styled(MuiCard)<CardProps>(({ theme }) => ({
@@ -64,7 +67,28 @@ const FormControlLabel = styled(MuiFormControlLabel)<FormControlLabelProps>(({ t
   }
 }))
 
+const InputErrorMessage = styled(Typography)(({ theme }) => ({
+  marginTop: theme.spacing(-4),
+  marginBottom: theme.spacing(2),
+  fontSize: '12px',
+  color: theme.palette.error.main
+}))
+
 const RegisterPage = () => {
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<FormSchemaType>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: ''
+    }
+  })
+
   // ** States
   const [values, setValues] = useState<State>({
     password: '',
@@ -76,7 +100,7 @@ const RegisterPage = () => {
   // ** Hook
   const theme = useTheme()
 
-  const onChange = (e: ChangeEvent<HTMLInputElement>, field: ControllerRenderProps<FieldValues, 'password'>) => {
+  const onChange = (e: ChangeEvent<HTMLInputElement>, field: ControllerRenderProps<FormSchemaType, 'password'>) => {
     setValues({ ...values, password: e?.target?.value })
     field.onChange(e.target?.value)
   }
@@ -86,8 +110,6 @@ const RegisterPage = () => {
   const handleMouseDownPassword = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
   }
-
-  const { register, control, handleSubmit } = useForm({})
 
   const onSubmit = (data: any) => {
     console.log(data)
@@ -176,9 +198,10 @@ const RegisterPage = () => {
             </Typography>
             <Typography variant='body2'>Make your life easy and fun!</Typography>
           </Box>
-          <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <TextField
               {...register('name')}
+              error={!!errors.name}
               autoFocus
               type='text'
               fullWidth
@@ -186,13 +209,23 @@ const RegisterPage = () => {
               label='Name'
               sx={{ marginBottom: 4 }}
             />
-            <TextField {...register('email')} fullWidth type='email' label='Email' sx={{ marginBottom: 4 }} />
+            {errors.name && <InputErrorMessage>{errors.name?.message}</InputErrorMessage>}
+
+            <TextField
+              {...register('email')}
+              error={!!errors.email}
+              fullWidth
+              type='email'
+              label='Email'
+              sx={{ marginBottom: 4 }}
+            />
+            {errors.email && <InputErrorMessage>{errors.email?.message}</InputErrorMessage>}
+
             <Controller
               name='password'
               control={control}
-              rules={{ required: true }}
               render={({ field }) => (
-                <FormControl fullWidth>
+                <FormControl fullWidth sx={{ marginBottom: 4 }} error={!!errors.password}>
                   <InputLabel htmlFor='auth-register-password'>Password</InputLabel>
                   <OutlinedInput
                     label='Password'
@@ -218,6 +251,7 @@ const RegisterPage = () => {
                 </FormControl>
               )}
             />
+            {errors.password && <InputErrorMessage>{errors.password?.message}</InputErrorMessage>}
 
             <FormControlLabel
               control={
@@ -238,7 +272,9 @@ const RegisterPage = () => {
                   </Link>
                 </Fragment>
               }
+              sx={{ marginTop: -2 }}
             />
+
             <Button
               fullWidth
               size='large'
@@ -249,6 +285,7 @@ const RegisterPage = () => {
             >
               Sign up
             </Button>
+
             <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
               <Typography variant='body2' sx={{ marginRight: 2 }}>
                 Already have an account?
