@@ -3,7 +3,8 @@ import { ChangeEvent, MouseEvent, ReactNode, useState } from 'react'
 
 // ** Next Imports
 import Link from 'next/link'
-import { useRouter } from 'next/router'
+
+// import { useRouter } from 'next/router'
 
 // ** MUI Components
 import Box from '@mui/material/Box'
@@ -39,10 +40,22 @@ import BlankLayout from 'src/templates/layouts/BlankLayout'
 // ** Demo Imports
 import FooterIllustrationsV1 from 'src/views/pages/auth/FooterIllustration'
 
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Controller, ControllerRenderProps, useForm } from 'react-hook-form'
+import { InputErrorMessage } from 'src/components'
+
 interface State {
   password: string
   showPassword: boolean
 }
+
+type FormSchemaType = z.infer<typeof formSchema>
+
+const formSchema = z.object({
+  identifier: z.string().email('Invalid email').min(1, 'Email is required'),
+  password: z.string().min(1, 'Password is required').min(6, 'Password must have more than 6 characters')
+})
 
 // ** Styled Components
 const Card = styled(MuiCard)<CardProps>(({ theme }) => ({
@@ -63,6 +76,19 @@ const FormControlLabel = styled(MuiFormControlLabel)<FormControlLabelProps>(({ t
 }))
 
 const LoginPage = () => {
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<FormSchemaType>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      identifier: '',
+      password: ''
+    }
+  })
+
   // ** State
   const [values, setValues] = useState<State>({
     password: '',
@@ -71,10 +97,12 @@ const LoginPage = () => {
 
   // ** Hook
   const theme = useTheme()
-  const router = useRouter()
 
-  const handleChange = (prop: keyof State) => (event: ChangeEvent<HTMLInputElement>) => {
-    setValues({ ...values, [prop]: event.target.value })
+  // const router = useRouter()
+
+  const onChange = (e: ChangeEvent<HTMLInputElement>, field: ControllerRenderProps<FormSchemaType, 'password'>) => {
+    setValues({ ...values, password: e?.target?.value })
+    field.onChange(e.target?.value)
   }
 
   const handleClickShowPassword = () => {
@@ -83,6 +111,16 @@ const LoginPage = () => {
 
   const handleMouseDownPassword = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
+  }
+
+  const onSubmit = async (data: FormSchemaType) => {
+    console.log({ ...data })
+
+    try {
+      console.log('res')
+    } catch (e) {
+      console.log('111111111111111111111', e)
+    }
   }
 
   return (
@@ -168,30 +206,48 @@ const LoginPage = () => {
             </Typography>
             <Typography variant='body2'>Please sign-in to your account and start the adventure</Typography>
           </Box>
-          <form noValidate autoComplete='off' onSubmit={e => e.preventDefault()}>
-            <TextField autoFocus fullWidth id='email' label='Email' sx={{ marginBottom: 4 }} />
-            <FormControl fullWidth>
-              <InputLabel htmlFor='auth-login-password'>Password</InputLabel>
-              <OutlinedInput
-                label='Password'
-                value={values.password}
-                id='auth-login-password'
-                onChange={handleChange('password')}
-                type={values.showPassword ? 'text' : 'password'}
-                endAdornment={
-                  <InputAdornment position='end'>
-                    <IconButton
-                      edge='end'
-                      onClick={handleClickShowPassword}
-                      onMouseDown={handleMouseDownPassword}
-                      aria-label='toggle password visibility'
-                    >
-                      {values.showPassword ? <EyeOutline /> : <EyeOffOutline />}
-                    </IconButton>
-                  </InputAdornment>
-                }
-              />
-            </FormControl>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <TextField
+              {...register('identifier')}
+              error={!!errors.identifier}
+              fullWidth
+              type='email'
+              label='Email'
+              sx={{ marginBottom: 4 }}
+            />
+            {errors.identifier && <InputErrorMessage>{errors.identifier?.message}</InputErrorMessage>}
+
+            <Controller
+              name='password'
+              control={control}
+              render={({ field }) => (
+                <FormControl fullWidth sx={{ marginBottom: 4 }} error={!!errors.password}>
+                  <InputLabel htmlFor='auth-register-password'>Password</InputLabel>
+                  <OutlinedInput
+                    label='Password'
+                    value={values.password}
+                    id='auth-register-password'
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      onChange(e, field)
+                    }}
+                    type={values.showPassword ? 'text' : 'password'}
+                    endAdornment={
+                      <InputAdornment position='end'>
+                        <IconButton
+                          edge='end'
+                          onClick={handleClickShowPassword}
+                          onMouseDown={handleMouseDownPassword}
+                          aria-label='toggle password visibility'
+                        >
+                          {values.showPassword ? <EyeOutline fontSize='small' /> : <EyeOffOutline fontSize='small' />}
+                        </IconButton>
+                      </InputAdornment>
+                    }
+                  />
+                </FormControl>
+              )}
+            />
+            {errors.password && <InputErrorMessage>{errors.password?.message}</InputErrorMessage>}
             <Box
               sx={{ mb: 4, display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}
             >
@@ -200,13 +256,7 @@ const LoginPage = () => {
                 <LinkStyled onClick={e => e.preventDefault()}>Forgot Password?</LinkStyled>
               </Link>
             </Box>
-            <Button
-              fullWidth
-              size='large'
-              variant='contained'
-              sx={{ marginBottom: 7 }}
-              onClick={() => router.push('/')}
-            >
+            <Button fullWidth size='large' type='submit' variant='contained' sx={{ marginBottom: 7 }}>
               Login
             </Button>
             <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -214,7 +264,7 @@ const LoginPage = () => {
                 New on our platform?
               </Typography>
               <Typography variant='body2'>
-                <Link passHref href='/pages/register'>
+                <Link passHref href='/register'>
                   <LinkStyled>Create an account</LinkStyled>
                 </Link>
               </Typography>

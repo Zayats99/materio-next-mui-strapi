@@ -33,6 +33,10 @@ import FooterIllustrationsV1 from 'src/views/pages/auth/FooterIllustration'
 import { Controller, ControllerRenderProps, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { v4 as uuid } from 'uuid'
+import { requestRegister } from 'src/api/auth'
+import { InputErrorMessage } from 'src/components'
+import { useRouter } from 'next/router'
 
 interface State {
   password: string
@@ -67,17 +71,11 @@ const FormControlLabel = styled(MuiFormControlLabel)<FormControlLabelProps>(({ t
   }
 }))
 
-const InputErrorMessage = styled(Typography)(({ theme }) => ({
-  marginTop: theme.spacing(-4),
-  marginBottom: theme.spacing(2),
-  fontSize: '12px',
-  color: theme.palette.error.main
-}))
-
 const RegisterPage = () => {
   const {
     register,
     control,
+    setError,
     handleSubmit,
     formState: { errors }
   } = useForm<FormSchemaType>({
@@ -99,6 +97,7 @@ const RegisterPage = () => {
 
   // ** Hook
   const theme = useTheme()
+  const router = useRouter()
 
   const onChange = (e: ChangeEvent<HTMLInputElement>, field: ControllerRenderProps<FormSchemaType, 'password'>) => {
     setValues({ ...values, password: e?.target?.value })
@@ -111,8 +110,18 @@ const RegisterPage = () => {
     event.preventDefault()
   }
 
-  const onSubmit = (data: any) => {
-    console.log(data)
+  const onSubmit = async (data: FormSchemaType) => {
+    const username = data.name + '-' + uuid().slice(0, 8)
+    console.log({ ...data, username })
+    const payload = { ...data, username }
+
+    await requestRegister(payload)
+      .then(() => {
+        router.push('/register/email-verification')
+      })
+      .catch(() => {
+        setError('email', { type: 'custom', message: 'Email is already taken' }, { shouldFocus: true })
+      })
   }
 
   return (
